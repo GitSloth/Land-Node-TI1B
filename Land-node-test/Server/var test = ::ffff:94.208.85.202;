@@ -1,0 +1,5 @@
+var test = ::ffff:94.208.85.202;
+var test2 = test.slice(0,10);
+
+console.log(test);
+console.log(tet2);

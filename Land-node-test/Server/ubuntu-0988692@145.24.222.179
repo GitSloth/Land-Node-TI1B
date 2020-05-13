@@ -1,0 +1,85 @@
+var express = require("express");
+var app = express();
+var http = require("http").Server(app);
+var io = require("socket.io")(http);
+
+var DASB;
+var ANVI;
+var REBK;
+var FLFL;
+
+
+io.on("connection", (socket) => {
+    console.info(`Client connected [id=${socket.id}]`);
+
+    socket.on("disconnect", () => {
+        console.info(`Client gone [id=${socket.id}]`);
+
+    });
+
+    socket.on("verbonden", function(bankCode){
+        if (bankCode == "DASB"){
+            DASB = socket.id;
+            console.log("DASB: ", socket.id);
+        }
+        if (bankCode == "ANVI"){
+            ANVI = socket.id;
+            console.log("ANVI: ", socket.id);
+        }
+        if (bankCode == "REBK"){
+            REBK = socket.id;
+            console.log("REBK: ", socket.id);
+        }
+        if (bankCode == "FLFL"){
+            FLFL = socket.id;
+            console.log("FLFL: ", socket.id);
+        }
+        console.log(socket.handshake.address);
+    });
+
+    socket.on("withdraw", function(withdrawBody){
+        const { receiveBank } = withdrawBody.header; 
+        console.log("Withdraw ontvangen. receiveBank: ", receiveBank);  
+        if(receiveBank == 'DASB'){
+            io.to(DASB).emit('withdraw', withdrawBody);
+        }   
+        else if(receiveBank == 'ANVI'){
+            io.to(ANVI).emit('withdraw', withdrawBody);
+        }
+        else if(receiveBank == 'REBK'){
+            io.to(REBK).emit('withdraw', withdrawBody);
+        }
+        else if(receiveBank == 'FLFL'){
+            io.to(FLFL).emit('withdraw', withdrawBody);
+        }
+        
+    });
+
+    socket.on('response', responseBody => {
+
+        const { receiveBank } = responseBody.header;
+        console.log("Response ontvangen. receiveBank: ", receiveBank);
+        if(receiveBank == 'DASB'){
+            io.to(DASB).emit('response', responseBody);
+        }   
+        if(receiveBank == 'ANVI'){
+            io.to(ANVI).emit('response', responseBody);
+        }
+        if(receiveBank == 'REBK'){
+            io.to(REBK).emit('response', responseBody);
+        }
+        if(receiveBank == 'FLFL'){
+            io.to(FLFL).emit('response', responseBody);
+        }   
+        
+    })
+
+    socket.on("balance", balanceBody => {
+        const { receiveCountry } = balanceBody.header
+        socket.to(receiveCountry).emit('balance', balanceBody)
+    })
+});
+
+http.listen(3000, function(){
+    console.log('listening on : 3000');
+  });
